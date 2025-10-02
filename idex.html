@@ -1,1 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Comblyzer - Flame Properties</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+</head>
+<body>
+  <h2>Flame Properties Calculator</h2>
+  
+  <label>Pressure [atm]: <input id="P" type="number" value="1" step="1"></label><br>
+  <label>Temperature [K]: <input id="T" type="number" value="300" step="50"></label><br>
+  <label>Equivalence Ratio φ: <input id="phi" type="number" value="1.0" step="0.1"></label><br>
+  <label>H₂ Fraction: <input id="h2" type="number" value="0.5" step="0.1" min="0" max="1"></label><br>
 
+  <label><input id="linear" type="checkbox"> Use Linear Chemistry</label><br><br>
+  
+  <button onclick="compute()">Compute</button>
+  
+  <div id="results"></div>
+  
+  <script>
+    function loadCSV(url, callback) {
+      Papa.parse(url, {
+        download: true,
+        header: true,
+        dynamicTyping: true,
+        complete: results => callback(results.data)
+      });
+    }
+    
+    function interpolate(data, P, T, phi, h2) {
+      let best = data[0];
+      let bestDist = Infinity;
+      for (let row of data) {
+        let dist = Math.abs(row.Pressure_atm - P) +
+                   Math.abs(row.Temp_K - T) +
+                   Math.abs(row.Phi - phi) +
+                   Math.abs(row.H2_frac - h2);
+        if (dist < bestDist) {
+          bestDist = dist;
+          best = row;
+        }
+      }
+      return best;
+    }
+    
+    function compute() {
+      const P = parseFloat(document.getElementById("P").value);
+      const T = parseFloat(document.getElementById("T").value);
+      const phi = parseFloat(document.getElementById("phi").value);
+      const h2 = parseFloat(document.getElementById("h2").value);
+      const useLinear = document.getElementById("linear").checked;
+      
+      const file = useLinear ? "data/lookup_linear.csv" : "data/lookup_detailed.csv";
+      
+      loadCSV(file, function(data) {
+        const res = interpolate(data, P, T, phi, h2);
+        document.getElementById("results").innerHTML =
+          `<h3>Results:</h3>
+           <p>SL = ${res.SL.toFixed(3)} m/s</p>
+           <p>Tad = ${res.Tad.toFixed(1)} K</p>
+           <p>Flame thickness = ${res.ft_d.toExponential(3)} m</p>`;
+      });
+    }
+  </script>
+</body>
+</html>
