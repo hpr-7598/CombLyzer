@@ -52,7 +52,7 @@
       const h2 = parseFloat(document.getElementById("h2").value);
       const useLinear = document.getElementById("linear").checked;
       
-      const file = useLinear ? "data/lookup_linear.csv" : "data/T130FlameProps.csv";
+      const file = useLinear ? "Data/T130FlamePropsCSU45.csv" : "Data/T130FlamePropsCSU45.csv";
       
       loadCSV(file, function(data) {
         const res = interpolate(data, P, T, phi, h2);
